@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CampingMaster</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        .navbar-brand {
+            font-weight: 700;
+            color: #2c5e1a !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-icon {
+            margin-right: 10px;
+            color: #2c5e1a;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-avatar-container {
+            position: relative;
+            z-index: 2000;
+        }
+
+        .user-card {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            width: 250px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 15px;
+            display: none;
+            z-index: 2100;
+        }
+
+            .user-card.show {
+                display: block;
+            }
+
+        .user-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-card-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .user-card-info h5 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .user-card-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .user-card-links {
+            display: flex;
+            flex-direction: column;
+        }
+
+            .user-card-links a {
+                padding: 8px 0;
+                text-decoration: none;
+                color: #212529;
+            }
+
+                .user-card-links a:hover {
+                    background-color: #f8f9fa;
+                }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    CampingMaster
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                      
+                    </ul>
+                    <div class="d-flex align-items-center user-avatar-container">
+						@if (Model.CurrentUser == null)
+						{
+							<a class="btn btn-outline-success" href="/Login">Login</a>
+						}
+						else
+						{
+							<a class="btn btn-outline-success" href="/Logout">Logout</a>
+						}
+                        <div class="user-avatar" id="userAvatar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
+                            </svg>
+                        </div>
+
+                        
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="user-card" id="userCard">
+            <div class="user-card-header">
+                <div class="user-card-avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
+                    </svg>
+                </div>
+                <div class="user-card-info">
+                    @if (Model.CurrentUser != null)
+                    {
+                        <h5>@Model.CurrentUser.Username</h5>
+                        <p>@Model.CurrentUser.Email</p>
+                    }
+                    else
+                    {
+                        <h5>Guest User</h5>
+                        <p>Please login for full access</p>
+                    }
+                </div>
+            </div>
+            <div class="user-card-links">
+                @if (Model.CurrentUser != null){
+                    <a href="/Logout">Logout</a>
+					<a href="/Account">Profile</a>
+                }
+                else{
+                    <a href="/Login">Login</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <div class="container my-4">
+        @RenderBody()
+    </div>s
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle user card
+        document.getElementById('userAvatar').addEventListener('click', function (e) {
+            e.stopPropagation();
+            document.getElementById('userCard').classList.toggle('show');
+        });
+
+        // Close user card when clicking outside
+        document.addEventListener('click', function (event) {
+            const userAvatar = document.getElementById('userAvatar');
+            const userCard = document.getElementById('userCard');
+
+            if (!userAvatar.contains(event.target) && !userCard.contains(event.target)) {
+                userCard.classList.remove('show');
+            }
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

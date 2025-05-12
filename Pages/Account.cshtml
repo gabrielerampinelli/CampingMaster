@@ -1,0 +1,467 @@
+﻿@page
+@model CampingMaster.Pages.AccountModel
+@{
+    ViewData["Title"] = "CampingMaster - My Account";
+    Layout = "_Layout";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage your CampingMaster account and reservations" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #60ad5e;
+            --primary-dark: #005005;
+            --secondary: #ff6f00;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --background-light: #f5f7fa;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --focus-outline: 3px solid #ff9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-light);
+            padding: 2rem 0;
+            position: relative;
+            overflow: visible;
+            z-index: 10;
+        }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('/api/placeholder/1200/300');
+                background-size: cover;
+                background-position: center;
+                opacity: 0.2;
+                z-index: 0;
+                overflow: hidden;
+            }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+            .logo i {
+                margin-right: 10px;
+            }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .main-content {
+            padding: 3rem 0;
+            min-height: 50vh;
+        }
+
+        .account-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+            .account-section:hover {
+                transform: translateY(-5px);
+            }
+
+        .account-title {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
+            font-weight: 600;
+        }
+
+            .account-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 60px;
+                height: 3px;
+                background-color: var(--secondary);
+                border-radius: 2px;
+            }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+            .form-control:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+                outline: none;
+            }
+
+        .form-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+            .form-button:hover {
+                background-color: var(--primary-dark);
+                transform: translateY(-2px);
+            }
+
+            .form-button:focus {
+                outline: var(--focus-outline);
+                outline-offset: 2px;
+            }
+
+        .reservation-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .reservation-title {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
+            font-weight: 600;
+        }
+
+            .reservation-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 60px;
+                height: 3px;
+                background-color: var(--secondary);
+                border-radius: 2px;
+            }
+
+        .reservations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+            .reservations-table th {
+                background-color: var(--primary-light);
+                color: white;
+                text-align: left;
+                padding: 1rem;
+                font-weight: 600;
+            }
+
+            .reservations-table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            .reservations-table td {
+                padding: 1rem;
+                border-bottom: 1px solid #eee;
+            }
+
+            .reservations-table tr:hover {
+                background-color: #f0f7f0;
+            }
+
+        .empty-alert {
+            background-color: #f0f7f0;
+            color: var(--primary-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+            .empty-alert i {
+                font-size: 1.5rem;
+                margin-right: 10px;
+                color: var(--primary);
+            }
+
+        .footer {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            padding: 3rem 0 2rem;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .footer-bottom p {
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+
+        @@keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .account-section, .reservation-section {
+            animation: fadeInUp 0.6s forwards;
+        }
+
+        @@media (max-width: 768px) {
+            .header h1
+
+        {
+            font-size: 2rem;
+        }
+
+        .account-section, .reservation-section {
+            padding: 1.5rem;
+        }
+
+        .reservation-title, .account-title {
+            font-size: 1.5rem;
+        }
+
+        .form-button {
+            width: 100%;
+        }
+
+        .reservations-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+            .profile-picture {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                object-fit: cover;
+                cursor: pointer;
+                border: 3px solid var(--primary);
+                margin-bottom: 1rem;
+            }
+
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo-container">
+                    <a href="/" class="logo">
+                        <i class="fas fa-campground"></i> CampingMaster
+                    </a>
+                </div>
+            </div>
+
+            <div class="header-content">
+                <h1>My Account</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <section class="account-section">
+                <h2 class="account-title">Account Information</h2>
+                <form method="post">
+                    <input type="hidden" asp-for="CurrentUser.Id" />
+
+                    <div class="form-group">
+                        <label asp-for="CurrentUser.Username" class="form-label">Username</label>
+                        <input asp-for="CurrentUser.Username" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CurrentUser.Email" class="form-label">Email</label>
+                        <input asp-for="CurrentUser.Email" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CurrentUser.Password" class="form-label">New Password</label>
+                        <input asp-for="CurrentUser.Password" class="form-control" type="password" placeholder="Leave blank to keep current" />
+                    </div>
+                    <button type="submit" class="form-button">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </section>
+
+            <section class="reservation-section">
+                <h2 class="reservation-title">My Reservations</h2>
+                @if (Model.Reservations.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="reservations-table">
+                            <tbody>
+                                @foreach (var reservation in Model.Reservations)
+                                {
+                                    <div class="card mb-3 position-relative">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@reservation.Camping?.Name</h5>
+                                            <div class="d-flex justify-content-between px-4">
+                                                <div>
+                                                    <strong>From:</strong> @reservation.CheckIn.ToShortDateString()<br />
+                                                    <strong>To:</strong> @reservation.CheckOut.ToShortDateString()<br />
+                                                    <strong>People:</strong> @reservation.NumberOfPeople
+                                                </div>
+                                            </div>
+                                            <div class="dropdown position-absolute top-50 end-0 translate-middle-y me-2">
+                                                <form method="post" asp-page-handler="Delete" asp-route-id="@reservation.Id" onsubmit="return confirm('Are you sure?');">
+                                                    <button type="submit" class="dropdown-item" style="background-color:red;color:white;border-radius:8px">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-alert">
+                        <i class="fas fa-info-circle"></i>
+                        <span>You have no reservations yet. Start exploring camping spots to book your next adventure!</span>
+                    </div>
+                }
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 CampingMaster. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation for sections
+            const sections = document.querySelectorAll('.account-section, .reservation-section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                setTimeout(() => {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, 100 * (index + 1));
+            });
+
+            // Form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const usernameInput = document.querySelector('[asp-for="CurrentUser.Username"]');
+                    const emailInput = document.querySelector('[asp-for="CurrentUser.Email"]');
+
+                    if (usernameInput && usernameInput.value.trim() === '') {
+                        e.preventDefault();
+                        alert('Username cannot be empty');
+                        usernameInput.focus();
+                        return false;
+                    }
+
+                    if (emailInput && emailInput.value.trim() === '') {
+                        e.preventDefault();
+                        alert('Email cannot be empty');
+                        emailInput.focus();
+                        return false;
+                    }
+
+                    return true;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

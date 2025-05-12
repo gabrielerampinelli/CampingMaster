@@ -1,0 +1,29 @@
+/* wwwroot/css/site.css */
+
+/* Main Container */
+.camping-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('/images/hero-camping.jpg');
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    padding: 60px 30px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* …rest of your styles… */
+
+@media (max-width: 768px) {
+    .camping-grid {
+        grid-template-columns: 1fr;
+    }
+    /* … */
+}

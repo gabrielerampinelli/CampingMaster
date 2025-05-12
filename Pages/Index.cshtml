@@ -1,0 +1,2125 @@
+﻿@page
+@model IndexModel
+@{
+    // ViewData["Title"] is now set dynamically in OnGetAsync based on user role.
+    Layout = "_Layout";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @if (!Model.IsAdmin)
+    {
+        <meta name="description" content="Find and book the perfect camping spots for your next outdoor adventure with CampingMaster" />
+    }
+    else
+    {
+        <meta name="description" content="CampingMaster User Management" />
+    }
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Existing CSS styles from your provided code --- */
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #60ad5e;
+            --primary-dark: #005005;
+            --secondary: #ff6f00;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --background-light: #f5f7fa;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --focus-outline: 3px solid #ff9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--secondary);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.3s;
+        }
+
+            .skip-link:focus {
+                top: 0;
+            }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1; /* Ensure container content is above header pseudo-element */
+        }
+
+        /* Styles for Header (Non-Admin View) */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-light);
+            padding: 2rem 0;
+            position: relative;
+            overflow: visible;
+            z-index: 10;
+        }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('/api/placeholder/1200/300'); /* Ensure this placeholder API works or replace */
+                background-size: cover;
+                background-position: center;
+                opacity: 0.2;
+                z-index: 0;
+            }
+
+        .header-content {
+            text-align: center;
+            padding: 2rem 0;
+            position: relative; /* For z-index stacking */
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+            .logo i {
+                margin-right: 10px;
+            }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .ai-suggestions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-top: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border-radius: 0 0 10px 10px;
+        }
+
+            .ai-suggestions.show { /* This class was not used in JS, but keeping for consistency if needed */
+                max-height: 350px;
+                padding: 10px 0;
+                overflow-y: auto;
+                visibility: visible;
+                display: block;
+            }
+
+            .ai-suggestions ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+
+        .ai-suggestion-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+            font-size: 1.05rem;
+            color: black;
+        }
+
+            .ai-suggestion-item:hover {
+                background-color: #f5f5f5;
+            }
+
+            .ai-suggestion-item i {
+                color: #2e7d32;
+                margin-right: 10px;
+                font-size: 1rem;
+            }
+
+        .ai-loading {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+        }
+
+        .search-form {
+            display: flex;
+            justify-content: center;
+            background: white;
+            border-radius: 50px;
+            padding: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .search-input {
+            flex-grow: 1;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            outline: none;
+        }
+
+            .search-input:focus {
+                box-shadow: 0 0 0 2px var(--primary-light);
+            }
+
+        .search-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 1rem 1.8rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+            .search-button:hover {
+                background-color: #e65100;
+                transform: translateY(-2px);
+            }
+
+            .search-button:focus {
+                outline: var(--focus-outline);
+                outline-offset: 2px;
+            }
+
+        .recent-searches {
+            background: white;
+            border-radius: 8px;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            width: 100%;
+            box-shadow: var(--card-shadow);
+            z-index: 5;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+            .recent-searches.show {
+                max-height: 300px;
+                padding: 10px 0;
+            }
+
+        .recent-search-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+            .recent-search-item:hover {
+                background-color: #f5f5f5;
+            }
+
+            .recent-search-item i {
+                color: #999;
+                margin-right: 10px;
+            }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-icon {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+        }
+
+            .user-icon:focus {
+                outline: var(--focus-outline);
+                border-radius: 50%;
+                outline-offset: 2px;
+            }
+
+        .user-icon-text {
+            margin-left: 5px;
+            font-size: 0.9rem;
+        }
+
+        .user-card {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            width: 280px;
+            background: white;
+            color: var(--text-dark);
+            box-shadow: var(--card-shadow);
+            border-radius: 10px;
+            padding: 1.2rem;
+            display: none;
+            z-index: 20;
+            animation: fadeIn 0.3s;
+        }
+
+            .user-card h4 {
+                margin-bottom: 0.8rem;
+                color: var(--primary-dark);
+                font-size: 1.1rem;
+            }
+
+            .user-card p {
+                font-size: 0.9rem;
+                color: #555;
+                margin-bottom: 0.5rem;
+            }
+
+        .user-card-actions {
+            display: flex;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .user-action-btn {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+            .user-action-btn:hover {
+                background: var(--primary);
+            }
+
+            .user-action-btn.logout {
+                background: #f44336;
+            }
+
+                .user-action-btn.logout:hover {
+                    background: #d32f2f;
+                }
+
+        .main-content {
+            padding: 3rem 0;
+            min-height: 50vh;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+            .filter-select:focus {
+                border-color: var(--primary);
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+            }
+
+        .filter-apply {
+            align-self: flex-end;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            margin-top: 1.5rem;
+        }
+
+            .filter-apply:hover {
+                background-color: var(--primary-dark);
+            }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-title {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+            .results-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 10%;
+                width: 80%;
+                height: 3px;
+                background-color: var(--secondary);
+                border-radius: 2px;
+            }
+
+        .results-count {
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .camping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .camping-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s ease;
+            transform: translateY(0);
+            opacity: 0;
+            animation: fadeInUp 0.6s forwards;
+            position: relative;
+        }
+
+            .camping-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            }
+
+            .camping-card:focus-within {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+                outline: var(--focus-outline);
+                outline-offset: 4px;
+            }
+
+        .camping-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .camping-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--secondary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .camping-content {
+            padding: 1.5rem;
+        }
+
+        .camping-name {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .camping-address {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+            .camping-address i {
+                margin-right: 5px;
+                color: var(--primary);
+                margin-top: 4px;
+            }
+
+        .camping-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .camping-feature {
+            background: #f0f7f0;
+            color: var(--primary-dark);
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+            .camping-feature i {
+                margin-right: 5px;
+                font-size: 0.7rem;
+            }
+
+        .camping-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .camping-rating {
+            display: flex;
+            align-items: center;
+        }
+
+        .rating-number {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .stars {
+            color: #ffd700;
+            margin-left: 0.3rem;
+        }
+
+        .camping-details {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+            .camping-details i {
+                margin-left: 5px;
+            }
+
+            .camping-details:hover {
+                background-color: var(--primary-dark);
+            }
+
+            .camping-details:focus {
+                outline: var(--focus-outline);
+                outline-offset: 2px;
+            }
+
+            .camping-details.book-now-style {
+                background-color: var(--secondary); /* Use accent color for more pop */
+                color: white;
+                padding: 0.8rem 1.5rem; /* Slightly larger padding */
+                font-weight: 600; /* Bolder text */
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Subtle shadow */
+                transition: all 0.3s ease;
+            }
+
+                .camping-details.book-now-style:hover {
+                    background-color: #e65100; /* Darker shade of secondary */
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+                }
+
+                .camping-details.book-now-style i {
+                    margin-left: 8px; /* More space for icon if present */
+                }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+            .no-results h3 {
+                color: var(--primary-dark);
+                margin-bottom: 1rem;
+            }
+
+        .no-results-suggestions {
+            margin-top: 2rem;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .suggested-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .suggested-keyword {
+            background: #f0f7f0;
+            color: var(--primary-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .suggested-keyword:hover {
+                background: var(--primary-light);
+                color: white;
+            }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 3rem;
+            gap: 0.5rem;
+        }
+
+        .pagination-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: white;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+            .pagination-item:hover {
+                background: var(--primary-light);
+                color: white;
+            }
+
+            .pagination-item.active {
+                background: var(--primary);
+                color: white;
+            }
+
+            .pagination-item:focus {
+                outline: var(--focus-outline);
+                outline-offset: 2px;
+            }
+
+        .footer {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            padding: 3rem 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+            .footer-column h3::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 50px;
+                height: 2px;
+                background: var(--secondary);
+            }
+
+        .footer-links {
+            list-style: none;
+        }
+
+            .footer-links li {
+                margin-bottom: 0.8rem;
+            }
+
+            .footer-links a {
+                color: #aaa;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+                .footer-links a:hover {
+                    color: white;
+                    padding-left: 5px;
+                }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .footer-bottom p {
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 100;
+        }
+
+            .back-to-top.visible {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .back-to-top:hover {
+                background: var(--primary-dark);
+                transform: translateY(-5px);
+            }
+
+        .modal { /* General modal, can be reused or specific one like admin-modal */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+            .modal.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            padding: 2rem;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-dark);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+            .toast.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .focus-visible:focus {
+            outline: var(--focus-outline);
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .dark-mode-toggle {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        @@media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+                border-radius: 12px;
+            }
+
+            .search-input {
+                width: 100%;
+                border-radius: 8px;
+                margin-bottom: 0.5rem;
+            }
+
+            .search-button {
+                width: 100%;
+                border-radius: 8px;
+            }
+
+            .camping-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-apply {
+                align-self: center;
+                width: 100%;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .search-wrapper {
+                max-width: 95%;
+            }
+        }
+
+        @@media (min-width: 769px) and (max-width: 1024px) {
+            .camping-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (prefers-contrast: more) {
+            :root {
+                --primary: #005005;
+                --primary-light: #007706;
+                --primary-dark: #003300;
+                --secondary: #cc5500;
+                --text-light: #ffffff;
+                --text-dark: #000000;
+                --background-light: #ffffff;
+            }
+
+            .camping-feature {
+                background: #e0e0e0;
+                color: #000000;
+            }
+
+            .stars {
+                color: #cc5500;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .camping-card:hover {
+                transform: none;
+            }
+        }
+
+    </style>
+
+    @if (Model.IsAdmin)
+    {
+        <style>
+            /* Admin-specific styles */
+            .admin-container {
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
+
+            .admin-header {
+                color: var(--primary-dark);
+                margin-bottom: 1.5rem;
+                border-bottom: 2px solid var(--primary);
+                padding-bottom: 0.5rem;
+                font-size: 2rem; /* Make admin header prominent */
+            }
+
+            .admin-table {
+                width: 100%;
+                margin-top: 20px;
+                border-collapse: collapse;
+                box-shadow: var(--card-shadow);
+                border-radius: 8px;
+                overflow: hidden; /* Ensures border-radius clips content */
+                background-color: #fff; /* Table background */
+            }
+
+                .admin-table th, .admin-table td {
+                    border-bottom: 1px solid #eee;
+                    padding: 12px 15px;
+                    text-align: left;
+                    font-size: 0.95rem;
+                }
+
+                .admin-table th {
+                    background-color: var(--primary-dark);
+                    color: var(--text-light);
+                    font-weight: 600;
+                    font-size: 1rem;
+                }
+
+                .admin-table tr:nth-child(even) {
+                    background-color: #f9f9f9; /* Slightly off-white for even rows */
+                }
+
+                .admin-table tr:hover {
+                    background-color: #e9f5e9; /* Light green hover, consistent with theme */
+                }
+
+                .admin-table .btn {
+                    padding: 6px 12px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    color: white !important; /* Ensure text is white */
+                    margin-right: 8px;
+                    font-size: 0.85rem;
+                    border: none;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+                    display: inline-flex; /* For icon alignment */
+                    align-items: center;
+                }
+
+                    .admin-table .btn i {
+                        margin-right: 5px;
+                    }
+
+                .admin-table .btn-primary { /* General primary button style for table */
+                    background-color: var(--primary);
+                }
+
+                    .admin-table .btn-primary:hover {
+                        background-color: var(--primary-dark);
+                    }
+
+                .admin-table .btn-edit { /* Specific style for edit if needed, or use btn-primary */
+                    background-color: var(--primary-light);
+                }
+
+                    .admin-table .btn-edit:hover {
+                        background-color: var(--primary);
+                    }
+
+
+                .admin-table .btn-danger {
+                    background-color: #f44336; /* Standard red for delete */
+                }
+
+                    .admin-table .btn-danger:hover {
+                        background-color: #d32f2f;
+                    }
+
+                .admin-table td:last-child { /* Actions column */
+                    white-space: nowrap; /* Prevent buttons from wrapping if space is tight */
+                }
+
+            /* Admin Modal Styles */
+            .admin-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                display: none; /* Hidden by default */
+                align-items: center;
+                justify-content: center;
+                z-index: 1050; /* Higher than other elements */
+                padding: 15px;
+            }
+
+                .admin-modal.active {
+                    display: flex;
+                }
+
+            .admin-modal-content {
+                background: white;
+                border-radius: 8px;
+                max-width: 500px;
+                width: 100%;
+                padding: 25px 30px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                position: relative;
+                animation: fadeInModal 0.3s ease-out;
+            }
+
+            @@keyframes fadeInModal {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .admin-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .admin-modal-title {
+                font-size: 1.5rem;
+                color: var(--primary-dark);
+            }
+
+            .admin-modal-close {
+                font-size: 1.5rem;
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #777;
+                padding: 5px;
+            }
+
+                .admin-modal-close:hover {
+                    color: #333;
+                }
+
+            .admin-modal-body .form-group {
+                margin-bottom: 18px;
+            }
+
+                .admin-modal-body .form-group label {
+                    display: block;
+                    font-weight: 600;
+                    margin-bottom: 6px;
+                    color: var(--text-dark);
+                    font-size: 0.9rem;
+                }
+
+            .admin-modal-body .form-control {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 1rem;
+                transition: border-color 0.2s;
+            }
+
+                .admin-modal-body .form-control:focus {
+                    border-color: var(--primary);
+                    outline: none;
+                    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+                }
+
+                .admin-modal-body .form-control.is-invalid {
+                    border-color: #dc3545;
+                }
+
+            .admin-modal-body .invalid-feedback { /* For individual field errors */
+                color: #dc3545;
+                font-size: 0.85rem;
+                margin-top: 4px;
+                display: block; /* Ensure it takes space */
+            }
+
+            #modalErrorSummary.invalid-feedback { /* For summary errors */
+                color: #721c24; /* Darker red for summary */
+                background-color: #f8d7da;
+                border: 1px solid #f5c6cb;
+                padding: .75rem 1.25rem;
+                margin-bottom: 1rem;
+                border-radius: .25rem;
+                display: none; /* Hidden by default */
+            }
+
+
+            .admin-modal-footer {
+                margin-top: 25px;
+                padding-top: 15px;
+                border-top: 1px solid #eee;
+                text-align: right;
+            }
+
+                .admin-modal-footer .btn { /* General button style for modal footer */
+                    padding: 10px 20px;
+                    font-size: 0.95rem;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                    border: none; /* Ensure no default browser borders */
+                }
+
+                .admin-modal-footer .btn-secondary {
+                    background-color: #6c757d;
+                    color: white;
+                    margin-right: 10px;
+                }
+
+                    .admin-modal-footer .btn-secondary:hover {
+                        background-color: #5a6268;
+                    }
+
+                .admin-modal-footer .btn-primary { /* Save button */
+                    background-color: var(--primary);
+                    color: white;
+                }
+
+                    .admin-modal-footer .btn-primary:hover {
+                        background-color: var(--primary-dark);
+                    }
+
+            .password-help-text {
+                font-size: 0.8rem;
+                color: #666;
+                margin-top: 4px;
+                display: block;
+            }
+
+            .no-users-message { /* Style for the "No users" paragraph */
+                padding: 20px;
+                text-align: center;
+                font-size: 1.1rem;
+                color: #555;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: var(--card-shadow);
+                margin-top: 20px;
+            }
+        </style>
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        @if (!Model.IsAdmin)
+        {
+            // Only run these for non-admin view
+            <text>
+                            // User card toggle (assuming userIcon is in _Layout.cshtml)
+                            const userIcon = document.getElementById("userIcon");
+                            const userCard = document.getElementById("userCard");
+
+                            if (userIcon && userCard) {
+                                userIcon.addEventListener("click", function(e) {
+                                    e.stopPropagation();
+                                    userCard.style.display = userCard.style.display === "block" ? "none" : "block";
+                                });
+
+                                document.addEventListener("click", function(e) {
+                                    if (userCard.style.display === "block" && !userIcon.contains(e.target) && !userCard.contains(e.target)) {
+                                        userCard.style.display = "none";
+                                    }
+                                });
+                            }
+
+                            // Search input focus for recent searches
+                            const searchInput = document.getElementById("searchInput");
+                            const recentSearches = document.getElementById("recentSearches");
+
+                            if (searchInput && recentSearches) {
+                                searchInput.addEventListener("focus", function() {
+                                    recentSearches.classList.add("show");
+                                });
+
+                                searchInput.addEventListener("blur", function(e) {
+                                    setTimeout(() => {
+                                        if (!recentSearches.contains(document.activeElement)) {
+                                            recentSearches.classList.remove("show");
+                                        }
+                                    }, 200);
+                                });
+                                recentSearches.addEventListener('mousedown', function(e) {
+                                    e.preventDefault();
+                                });
+                            }
+
+                            const filterApplyBtn = document.getElementById("filterApplyBtn");
+                            if (filterApplyBtn) {
+                                filterApplyBtn.addEventListener("click", function() {
+                                    if (window.showToast) window.showToast("Filters applied successfully!");
+                                });
+                            }
+
+                            const recentSearchItems = document.querySelectorAll(".recent-search-item");
+                            if (recentSearchItems.length > 0 && searchInput) {
+                                recentSearchItems.forEach(item => {
+                                    item.addEventListener("click", function() {
+                                        const searchText = this.querySelector("span").textContent;
+                                        searchInput.value = searchText;
+                                        const searchForm = document.getElementById("searchForm");
+                                        if(searchForm) searchForm.submit();
+                                    });
+                                });
+                            }
+
+                            const suggestedKeywords = document.querySelectorAll(".suggested-keyword");
+                            if (suggestedKeywords.length > 0 && searchInput) {
+                                suggestedKeywords.forEach(keyword => {
+                                    keyword.addEventListener("click", function() {
+                                        searchInput.value = this.textContent;
+                                         const searchForm = document.getElementById("searchForm");
+                                        if(searchForm) searchForm.submit();
+                                    });
+                                });
+                            }
+
+                            const campingCards = document.querySelectorAll(".camping-card");
+                            if (campingCards.length > 0) {
+                                campingCards.forEach(card => {
+                                    card.setAttribute("tabindex", "0");
+                                    card.addEventListener("keydown", function(e) {
+                                        if (e.key === "Enter") {
+                                            const detailsLink = this.querySelector(".camping-details");
+                                            if (detailsLink) detailsLink.click();
+                                        }
+                                    });
+                                });
+                            }
+            </text>
+        }
+
+            // Common JS (runs for both admin and non-admin)
+            const backToTopButton = document.getElementById("backToTop");
+            if (backToTopButton) {
+                window.addEventListener("scroll", function() {
+                    if (window.scrollY > 300) {
+                        backToTopButton.classList.add("visible");
+                    } else {
+                        backToTopButton.classList.remove("visible");
+                    }
+                });
+                backToTopButton.addEventListener("click", function() {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                });
+            }
+
+            function showToast(message) {
+                const toast = document.getElementById("toast");
+                if (toast) {
+                    toast.textContent = message;
+                    toast.classList.add("show");
+                    setTimeout(() => {
+                        toast.classList.remove("show");
+                    }, 3000);
+                }
+            }
+            window.showToast = showToast; // Make globally available
+
+
+        @if (Model.IsAdmin)
+        {
+            <text>
+                        const userModal = document.getElementById('userModal');
+                        const userForm = document.getElementById('userForm');
+                        const userModalTitle = document.getElementById('userModalTitle');
+                        const addNewUserBtn = document.getElementById('addNewUserBtn');
+                        const modalCloseButtons = userModal.querySelectorAll('[data-dismiss="modal"]');
+                        const modalErrorSummary = document.getElementById('modalErrorSummary'); // For general modal errors
+
+                        function clearFormValidation() {
+                            userForm.querySelectorAll('.form-control').forEach(input => {
+                                input.classList.remove('is-invalid');
+                            });
+                            // Clear individual field error messages
+                            userForm.querySelectorAll('.invalid-feedback').forEach(el => {
+                                if (el.id !== 'modalErrorSummary') { // Don't clear the summary div itself, just its content
+                                    el.textContent = '';
+                                }
+                            });
+                            // Clear and hide summary error message
+                            if (modalErrorSummary) {
+                                modalErrorSummary.textContent = '';
+                                modalErrorSummary.style.display = 'none';
+                            }
+                        }
+
+                        function displayFormErrors(errors, summaryMessage = null) {
+                            clearFormValidation(); // Clear previous errors first
+
+                            if (summaryMessage && modalErrorSummary) {
+                                modalErrorSummary.textContent = summaryMessage;
+                                modalErrorSummary.style.display = 'block';
+                            }
+
+                            if (errors && typeof errors === 'object') { // Field-specific errors from backend
+                                for (const fieldName in errors) {
+                                    const input = userForm.querySelector(`[name="${fieldName}"]`);
+                                    // Find the specific invalid-feedback div for this field
+                                    const feedbackElement = input ? input.closest('.form-group').querySelector('.invalid-feedback') : null;
+                                    if (input) {
+                                        input.classList.add('is-invalid');
+                                    }
+                                    if (feedbackElement) {
+                                        feedbackElement.textContent = Array.isArray(errors[fieldName]) ? errors[fieldName].join(' ') : errors[fieldName];
+                                    }
+                                }
+                            } else if (Array.isArray(errors) && modalErrorSummary) { // General errors array for summary
+                                modalErrorSummary.textContent = errors.join('\n');
+                                modalErrorSummary.style.display = 'block';
+                            }
+                        }
+
+                        function openUserModal(mode = 'create', userData = null) {
+                            clearFormValidation();
+                            userForm.reset(); // Resets form fields to default
+                            document.getElementById('userId').value = '0'; // Default to create
+                            const passwordHelpEl = document.getElementById('passwordHelp');
+                            const passwordInput = document.getElementById('password');
+
+                            if (mode === 'edit' && userData) {
+                                userModalTitle.textContent = 'Edit User';
+                                document.getElementById('userId').value = userData.id;
+                                document.getElementById('username').value = userData.username;
+                                document.getElementById('email').value = userData.email;
+                                document.getElementById('role').value = userData.role;
+                                document.getElementById('password').value = userData.password || "";
+                                if (passwordHelpEl) passwordHelpEl.style.display = 'block';
+                            } else {
+                                userModalTitle.textContent = 'Create New User';
+                                passwordInput.placeholder = ""; // No placeholder for create
+                                if (passwordHelpEl) passwordHelpEl.style.display = 'none';
+                            }
+                            userModal.classList.add('active');
+                            userModal.setAttribute('aria-hidden', 'false');
+                            document.getElementById('username').focus(); // Focus on the first input
+                        }
+
+                        function closeUserModal() {
+                            userModal.classList.remove('active');
+                            userModal.setAttribute('aria-hidden', 'true');
+                            clearFormValidation(); // Clear errors when closing
+                        }
+
+                        if (addNewUserBtn) {
+                            addNewUserBtn.addEventListener('click', () => openUserModal('create'));
+                        }
+
+                        modalCloseButtons.forEach(btn => btn.addEventListener('click', closeUserModal));
+                        userModal.addEventListener('click', (event) => { // Close on overlay click
+                            if (event.target === userModal) {
+                                closeUserModal();
+                            }
+                        });
+
+                        const adminTableBody = document.querySelector('.admin-table tbody');
+                        if (adminTableBody) {
+                            adminTableBody.addEventListener('click', function(event) {
+                                const editButton = event.target.closest('.edit-user-btn');
+                                const deleteButton = event.target.closest('.delete-user-btn');
+
+                                if (editButton) {
+                                    event.preventDefault();
+                                    const userData = {
+                                        id: editButton.dataset.userId,
+                                        username: editButton.dataset.username,
+                                        email: editButton.dataset.email,
+                                        role: editButton.dataset.role,
+                                        password: editButton.dataset.password
+                                    };
+
+                                        console.log(editButton.dataset);
+                                    openUserModal('edit', userData);
+                                }
+
+                                if (deleteButton) {
+                                    // Delete logic is already here and seems fine, just ensure checkEmptyTable is called
+                                    const userId = deleteButton.dataset.userId;
+                                    const username = deleteButton.dataset.username;
+                                    const form = deleteButton.closest('form.delete-user-form');
+                                    const antiforgeryToken = form ? form.querySelector('input[name="__RequestVerificationToken"]')?.value : null;
+
+                                    if (!userId || !antiforgeryToken) {
+                                        console.error('User ID or Antiforgery token not found for delete.');
+                                        if (window.showToast) window.showToast('Error: Could not identify user or security token missing.');
+                                        return;
+                                    }
+
+                                    if (confirm(`Are you sure you want to delete user "${username}" (ID: ${userId})? This action cannot be undone.`)) {
+                                        fetch(`?handler=DeleteUser&id=${userId}`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'RequestVerificationToken': antiforgeryToken,
+                                                'Accept': 'application/json'
+                                            }
+                                        })
+                                        .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                                        .then(({ ok, status, body }) => {
+                                            if (ok && body.success) {
+                                                if (window.showToast) window.showToast(body.message || `User "${username}" deleted successfully.`);
+                                                const row = deleteButton.closest('tr');
+                                                if (row) row.remove();
+                                                checkEmptyTable(); // Call after successful delete
+                                            } else {
+                                                if (window.showToast) window.showToast(`Error: ${body.message || 'Could not delete user.'} (Status: ${status})`);
+                                                console.error('Failed to delete user:', status, body);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error during delete request:', error);
+                                            if (window.showToast) window.showToast('An unexpected network error occurred.');
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
+                        if (userForm) {
+                            userForm.addEventListener('submit', function(event) {
+                                event.preventDefault();
+                                clearFormValidation();
+
+                                const formData = new FormData(userForm);
+                                const userObject = {};
+                                formData.forEach((value, key) => {
+                                    userObject[key] = (key === 'Id') ? parseInt(value, 10) : value;
+                                });
+
+                                if (userObject.Id !== 0 && userObject.Password === "") { // Editing and password blank
+                                    delete userObject.Password; // Don't send empty password for update
+                                } else if (userObject.Id === 0 && userObject.Password === "") { // Creating and password blank
+                                    // Backend should validate this, but good to catch here too
+                                    displayFormErrors(null, "Password is required for new users.");
+                                    const passwordField = userForm.querySelector('#password');
+                                    if (passwordField) {
+                                         passwordField.classList.add('is-invalid');
+                                         passwordField.closest('.form-group').querySelector('.invalid-feedback').textContent = "Password is required.";
+                                    }
+                                    return; // Stop submission
+                                }
+
+
+                                const antiforgeryTokenInput = userForm.querySelector('input[name="__RequestVerificationToken"]');
+                                if (!antiforgeryTokenInput || !antiforgeryTokenInput.value) {
+                                    console.error("Antiforgery token not found in form.");
+                                    displayFormErrors(null, "Security token missing. Please refresh.");
+                                    return;
+                                }
+                                const antiforgeryToken = antiforgeryTokenInput.value;
+
+                                fetch('?handler=SaveUser', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'RequestVerificationToken': antiforgeryToken,
+                                        'Accept': 'application/json'
+                                    },
+                                    body: JSON.stringify(userObject)
+                                })
+                                .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                                .then(({ ok, status, body }) => {
+                                    if (ok && body.success) {
+                                        if (window.showToast) window.showToast(body.message);
+                                        closeUserModal();
+                                        if (userObject.Id === 0 && body.user) { // Created new user
+                                            addTableRow(body.user);
+                                        } else if (body.user) { // Updated existing user
+                                            updateTableRow(body.user);
+                                        }
+                                        checkEmptyTable(); // Call after successful save
+                                    } else {
+                                        const errorMessage = body.message || `Error saving user (Status: ${status})`;
+                                        displayFormErrors(body.errors, errorMessage); // Pass field errors and summary
+                                        // No need for extra toast if errors are displayed in modal
+                                        console.error('Failed to save user:', status, body);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error during save request:', error);
+                                    displayFormErrors(null, 'An unexpected network or client-side error occurred.');
+                                    if (window.showToast) window.showToast('An unexpected network error occurred.');
+                                });
+                            });
+                        }
+
+                        function addTableRow(user) {
+                            const tableBody = document.querySelector('.admin-table tbody');
+                            if (!tableBody) return;
+
+                            // Ensure "no users" message is hidden if it was visible
+                            const adminTable = document.querySelector('.admin-table');
+                            if (adminTable) adminTable.style.display = ''; // Ensure table is visible
+                            const noUsersMessageP = document.querySelector('.admin-container > p.no-users-message');
+                            if (noUsersMessageP) noUsersMessageP.style.display = 'none';
+
+
+                            const newRow = document.createElement('tr');
+                            newRow.dataset.userId = user.id;
+                            // Get the antiforgery token HTML from the modal form to reuse in the new row's delete form
+                            const tokenHtml = userForm.querySelector('input[name="__RequestVerificationToken"]').outerHTML;
+
+                            newRow.innerHTML = `
+                                <td>${user.id}</td>
+                                <td data-prop="username">${user.username}</td>
+                                <td data-prop="email">${user.email || 'N/A'}</td>
+                                <td data-prop="role">${user.role || 'N/A'}</td>
+                                <td>
+                                    <button type="button" class="btn btn-edit focus-visible edit-user-btn"
+                                            data-user-id="${user.id}"
+                                            data-username="${user.username}"
+                                            data-email="${user.email || ''}"
+                                            data-role="${user.role || 'User'}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="post" class="delete-user-form" style="display:inline;">
+                                        ${tokenHtml}
+                                        <button type="button" class="btn btn-danger focus-visible delete-user-btn"
+                                                data-user-id="${user.id}"
+                                                data-username="${user.username}">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            `;
+                            tableBody.appendChild(newRow);
+                        }
+
+                        function updateTableRow(user) {
+                            console.log(user.passowrd);
+                            const row = document.querySelector(`.admin-table tbody tr[data-user-id="${user.id}"]`);
+                            if (row) {
+                                row.querySelector('[data-prop="username"]').textContent = user.username;
+                                row.querySelector('[data-prop="email"]').textContent = user.email || 'N/A';
+                                row.querySelector('[data-prop="role"]').textContent = user.role || 'N/A';
+
+                                const editBtn = row.querySelector('.edit-user-btn');
+                                if(editBtn) {
+                                    editBtn.dataset.username = user.username;
+                                    editBtn.dataset.email = user.email || '';
+                                    editBtn.dataset.role = user.role || 'User';
+                                    editBtn.dataset.password = user.password || "";
+                                }
+                                const deleteBtn = row.querySelector('.delete-user-btn');
+                                if(deleteBtn) {
+                                    deleteBtn.dataset.username = user.username;
+                                }
+                            }
+                        }
+
+                        function checkEmptyTable() {
+                            const adminTableBody = document.querySelector('.admin-table tbody');
+                            const adminTable = document.querySelector('.admin-table');
+                            const adminContainer = document.querySelector('.admin-container'); // The main container for admin content
+
+                            if (!adminTableBody || !adminTable || !adminContainer) return;
+
+                            if (adminTableBody.children.length === 0) {
+                                adminTable.style.display = 'none'; // Hide the table itself
+
+                                let noUsersMessage = adminContainer.querySelector('p.no-users-message');
+                                if (!noUsersMessage) { // If the message p doesn't exist, create and append it
+                                     noUsersMessage = document.createElement('p');
+                                     noUsersMessage.textContent = 'No users found in the system.';
+                                     noUsersMessage.className = 'no-users-message';
+                                     // Insert after the admin header, or at a suitable place
+                                     const header = adminContainer.querySelector('.admin-header');
+                                     if (header && header.nextSibling) {
+                                        header.parentNode.insertBefore(noUsersMessage, header.nextSibling);
+                                     } else if (header) {
+                                        header.parentNode.appendChild(noUsersMessage);
+                                     }
+                                     else { // Fallback if no header
+                                        adminContainer.insertBefore(noUsersMessage, adminTable);
+                                     }
+                                }
+                                noUsersMessage.style.display = 'block'; // Ensure it's visible
+                            } else {
+                                adminTable.style.display = ''; // Show table (block or table, depending on original display)
+                                let noUsersMessage = adminContainer.querySelector('p.no-users-message');
+                                if (noUsersMessage) {
+                                    noUsersMessage.style.display = 'none'; // Hide the "no users" message
+                                }
+                            }
+                        }
+                        // Initial check on page load
+                        checkEmptyTable();
+            </text>
+        }
+        });
+    </script>
+</head>
+<body>
+
+    @if (Model.IsAdmin)
+    {
+        <div class="container admin-container">
+            <h1 class="admin-header">User Management</h1>
+
+            <!-- Add New User Button -->
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button type="button" id="addNewUserBtn" class="btn btn-primary focus-visible" style="background-color: var(--primary); color:white; padding: 10px 15px; font-size: 0.9rem; border:none;">
+                    <i class="fas fa-plus"></i> Add New User
+                </button>
+            </div>
+
+            @if (Model.AllUsers != null && Model.AllUsers.Any())
+            {
+                <table class="admin-table" aria-label="User accounts">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.AllUsers)
+                        {
+                            <tr data-user-id="@user.Id">
+                                <td>@user.Id</td>
+                                <td data-prop="username">@user.Username</td>
+                                <td data-prop="email">@(user.Email ?? "N/A")</td>
+                                <td data-prop="role">@(user.Role ?? "N/A")</td>
+                                <td>
+                                    <button type="button" class="btn btn-edit focus-visible edit-user-btn"
+                                            data-user-id="@user.Id"
+                                            data-username="@user.Username"
+                                            data-email="@(user.Email ?? "")"
+                                            data-role="@(user.Role ?? "User")"
+                                            data-password="@(user.Password)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="post" class="delete-user-form" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="button" class="btn btn-danger focus-visible delete-user-btn"
+                                                data-user-id="@user.Id"
+                                                data-username="@user.Username">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <!-- This <p> will be managed by JS (checkEmptyTable), but can be here for initial state -->
+                <p class="no-users-message" style="display: block;">No users found in the system.</p>
+                <!-- The table structure should still exist for JS to potentially hide/show -->
+                <table class="admin-table" aria-label="User accounts" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added by JS if users are created -->
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <!-- User Create/Edit Modal -->
+        <div id="userModal" class="admin-modal" role="dialog" aria-labelledby="userModalTitle" aria-hidden="true" tabindex="-1">
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h5 class="admin-modal-title" id="userModalTitle">User</h5>
+                    <button type="button" class="admin-modal-close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <form id="userForm" novalidate>
+                    <!-- novalidate to prevent browser default validation, rely on JS/server -->
+                    @Html.AntiForgeryToken() <!-- Important for security -->
+                    <input type="hidden" id="userId" name="Id" value="0" />
+                    <div class="admin-modal-body">
+                        <div id="modalErrorSummary" class="invalid-feedback"></div> <!-- Summary errors at top -->
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" name="Username" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="Email">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="Password">a
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select class="form-control" id="role" name="Role" required>
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                                <!-- Add other roles if you have them -->
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="admin-modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-bottom">
+                    <p>© @DateTime.Now.Year CampingMaster - Admin Panel</p>
+                </div>
+            </div>
+        </footer>
+        <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+        <button id="backToTop" class="back-to-top focus-visible" aria-label="Back to top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    }
+    else
+    {
+        <!-- NON-ADMIN VIEW: Existing HTML for camping search page -->
+        <header class="header">
+            <div class="container">
+                <div class="nav-container">
+                    <div class="logo-container">
+                        <a href="/" class="logo focus-visible">
+                            <i class="fas fa-campground"></i> CampingMaster
+                        </a>
+                    </div>
+                    <!-- User menu icon (e.g., userIcon) is typically in _Layout.cshtml or here if page-specific -->
+                </div>
+
+                <div class="header-content">
+                    <h1 class="pulse">Find Your Perfect Camping Spot</h1>
+                    <p>Discover top-rated camping locations with all the amenities you need</p>
+
+                    <div class="search-wrapper">
+                        <form id="searchForm" method="get" class="search-form" asp-page="./Index">
+                            <input type="text"
+                                   id="searchInput"
+                                   name="query"
+                                   value="@Model.Query"
+                                   placeholder="Search camping locations (e.g., Lago di Garda, mountain view...)"
+                                   class="search-input"
+                                   aria-label="Search camping locations"
+                                   autocomplete="off" />
+                            <button type="submit" class="search-button">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </form>
+                        <div id="aiSuggestions" class="ai-suggestions" aria-live="polite"></div>
+                        <!-- <div id="recentSearches" class="recent-searches"> -->
+                        <!--     <ul> -->
+                        <!--         <li class="recent-search-item"><i class="fas fa-history"></i> <span>Lago di Garda</span></li> -->
+                        <!--     </ul> -->
+                        <!-- </div> -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" class="main-content">
+            <div class="container">
+                @if (!string.IsNullOrEmpty(Model.Query))
+                {
+                    <div class="results-header">
+                        <h2 class="results-title">Camping Results for "@Model.Query"</h2>
+                        @if (Model.Campings.Any())
+                        {
+                            <p class="results-count">Found @Model.Campings.Count() camping spot(s) for you</p>
+                        }
+                    </div>
+
+                    @if (Model.Campings.Any())
+                    {
+                        <div class="camping-grid" role="list">
+                            @{
+                                int animationDelayCounter = 1;
+                            }
+                            @foreach (var camping in Model.Campings)
+                            {
+                                <div class="camping-card" style="animation-delay: @(animationDelayCounter++ * 0.1)s" role="listitem">
+                                    @if (camping.PhotoUrls.Any())
+                                    {
+                                        <div class="camping-image" style="background-image: url('@camping.PhotoUrls[0]')" aria-label="Photo of @camping.Name"></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="camping-image" style="background-image: url('/api/placeholder/400/200?text=No+Image')" aria-label="No photo available for @camping.Name"></div>
+                                    }
+
+                                    @if (camping.Rating.HasValue && camping.Rating >= 4.5)
+                                    {
+                                        <div class="camping-badge">Top Rated</div>
+                                    }
+
+                                    <div class="camping-content">
+                                        <h3 class="camping-name">@camping.Name</h3>
+                                        <div class="camping-address">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>@camping.Address</span>
+                                        </div>
+
+                                        <div class="camping-features">
+                                            <span class="camping-feature"><i class="fas fa-wifi"></i> Wi-Fi</span>
+                                            <span class="camping-feature"><i class="fas fa-shower"></i> Showers</span>
+                                            <span class="camping-feature"><i class="fas fa-plug"></i> Power</span>
+                                        </div>
+
+                                        <div class="camping-footer">
+                                            <div class="camping-rating" aria-label="Rating @(camping.Rating?.ToString("0.0") ?? "N/A") out of 5 stars">
+                                                <span class="rating-number">@(camping.Rating?.ToString("0.0") ?? "N/A")</span>
+                                                <div class="stars">
+                                                    @for (int i = 0; i < Math.Floor(camping.Rating ?? 0); i++)
+                                                    {
+                                                        <i class="fas fa-star" aria-hidden="true"></i>
+                                                    }
+                                                    @if ((camping.Rating ?? 0) % 1 >= 0.5)
+                                                    {
+                                                        <i class="fas fa-star-half-alt" aria-hidden="true"></i>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <a asp-page="CampingDetails" asp-route-id="@camping.Id" class="camping-details focus-visible">
+                                                View Details <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-results">
+                            <h3>No results found for "@Model.Query"</h3>
+                            <p>Try searching for another location or check your spelling.</p>
+                            <div class="no-results-suggestions">
+                                <h4 class="suggestion-title">Popular camping destinations:</h4>
+                                <div class="suggested-keywords">
+                                    <div class="suggested-keyword">Lago di Garda</div>
+                                    <div class="suggested-keyword">Lake Tahoe</div>
+                                    <div class="suggested-keyword">Yosemite</div>
+                                    <div class="suggested-keyword">Mountain View</div>
+                                    <div class="suggested-keyword">Lakeside</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-results" style="padding: 2rem;">
+                        <h3 style="font-size: 1.5rem;">Welcome to CampingMaster!</h3>
+                        <p>Enter a location or keyword in the search bar above to find your perfect camping spot.</p>
+                        <div class="no-results-suggestions" style="margin-top:1rem;">
+                            <h4 class="suggestion-title" style="font-size:1.1rem;">Try searching for:</h4>
+                            <div class="suggested-keywords">
+                                <div class="suggested-keyword">Beach camping</div>
+                                <div class="suggested-keyword">National Parks</div>
+                                <div class="suggested-keyword">Pet-friendly</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-bottom">
+                    <p>© @DateTime.Now.Year CampingMaster. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <button id="backToTop" class="back-to-top focus-visible" aria-label="Back to top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+
+        <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+    }
+
+    @if (!Model.IsAdmin)
+    {
+        <script>
+            // AI Suggestions Script (only for non-admin view)
+            document.addEventListener('DOMContentLoaded', function() {
+                let loadedAISuggestions = false;
+                let suggestionsCache = [];
+                const searchInputForAI = document.getElementById('searchInput');
+                const aiSuggestionsContainer = document.getElementById('aiSuggestions');
+
+                if (!searchInputForAI || !aiSuggestionsContainer) {
+                    return;
+                }
+
+                const fetchAndDisplayAISuggestions = async () => {
+                    aiSuggestionsContainer.style.display = 'block';
+                    aiSuggestionsContainer.innerHTML = '<div class="ai-loading"><i class="fas fa-spinner fa-spin"></i> Loading suggestions...</div>';
+
+                    try {
+                        const response = await fetch('/Index?handler=AISuggestions');
+                        if (!response.ok) throw new Error(`Failed to fetch AI suggestions, status: ${response.status}`);
+
+                        suggestionsCache = await response.json();
+                        loadedAISuggestions = true;
+                        aiSuggestionsContainer.innerHTML = '';
+
+                        if (suggestionsCache && suggestionsCache.length > 0) {
+                            const list = document.createElement('ul');
+                            list.setAttribute('role', 'listbox');
+                            suggestionsCache.forEach(suggestionText => {
+                                const item = document.createElement('li');
+                                item.className = 'ai-suggestion-item';
+                                item.setAttribute('role', 'option');
+                                item.setAttribute('tabindex', '-1');
+                                const textNode = document.createTextNode(suggestionText);
+                                item.appendChild(textNode);
+                                item.addEventListener('click', () => {
+                                    searchInputForAI.value = suggestionText;
+                                    aiSuggestionsContainer.style.display = 'none';
+                                    const form = searchInputForAI.closest('form');
+                                    if (form) form.submit();
+                                });
+                                item.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Enter') item.click();
+                                });
+                                list.appendChild(item);
+                            });
+                            aiSuggestionsContainer.appendChild(list);
+                        } else {
+                            aiSuggestionsContainer.innerHTML = '<div class="ai-loading">No suggestions available right now.</div>';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching or displaying AI suggestions:', error);
+                        aiSuggestionsContainer.innerHTML = '<div class="ai-loading">Could not load suggestions.</div>';
+                    }
+                };
+
+                const showAISuggestionsFromCacheOrFetch = () => {
+                    if (loadedAISuggestions && suggestionsCache.length > 0) {
+                        aiSuggestionsContainer.style.display = 'block';
+                    } else if (!loadedAISuggestions) {
+                        fetchAndDisplayAISuggestions();
+                    } else {
+                         aiSuggestionsContainer.style.display = 'none';
+                    }
+                };
+
+                let debounceTimer;
+                searchInputForAI.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    if (searchInputForAI.value.length === 0) {
+                         aiSuggestionsContainer.style.display = 'none';
+                         return;
+                    }
+                    if (searchInputForAI.value.length > 2) {
+                         debounceTimer = setTimeout(showAISuggestionsFromCacheOrFetch, 500);
+                    }
+                });
+
+                searchInputForAI.addEventListener('focus', () => {
+                    if (searchInputForAI.value.length > 0 || !loadedAISuggestions) {
+                         showAISuggestionsFromCacheOrFetch();
+                    } else if (loadedAISuggestions && suggestionsCache.length > 0) {
+                         aiSuggestionsContainer.style.display = 'block';
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (aiSuggestionsContainer && !searchInputForAI.contains(e.target) && !aiSuggestionsContainer.contains(e.target)) {
+                        aiSuggestionsContainer.style.display = 'none';
+                    }
+                });
+            });
+        </script>
+    }
+</body>
+</html>

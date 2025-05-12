@@ -1,0 +1,319 @@
+﻿@page "{campingId:long}"
+@model CampingMaster.Pages.BookModel
+@{
+    ViewData["Title"] = "Book Camping";
+}
+@{
+	Layout = "_Layout";
+}
+
+<html lang="en">
+<head>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-dark: #1b5e20;
+            --primary-light: #4caf50;
+            --secondary-color: #ff9800;
+            --text-color: #333;
+            --light-bg: #f9f9f9;
+            --card-bg: #fff;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Base styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            background-color: var(--light-bg);
+        }
+
+        .booking-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .booking-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-dark);
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* Camping details card */
+        .camping-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+            .camping-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .camping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+            .camping-header h3 {
+                font-size: 24px;
+                margin: 0;
+                color: var(--primary-dark);
+            }
+
+        .rating {
+            display: flex;
+        }
+
+        .star {
+            color: var(--secondary-color);
+            font-size: 20px;
+            margin-left: 2px;
+        }
+
+            .star.empty {
+                color: #ccc;
+            }
+
+        .camping-description {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .camping-info {
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        /* Reservation form */
+        .reservation-form-container {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        .form-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: var(--primary-dark);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+
+        .date-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+            .date-input:focus {
+                border-color: var(--primary-color);
+                outline: none;
+            }
+
+        .form-actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .book-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .book-button:hover {
+                background-color: var(--primary-dark);
+                transform: translateY(-2px);
+            }
+
+            .book-button:active {
+                transform: translateY(0);
+            }
+
+            .book-button .icon {
+                margin-right: 8px;
+            }
+
+        /* Not found state */
+        .not-found {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .not-found-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .not-found p {
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+            .back-button:hover {
+                background-color: var(--primary-dark);
+            }
+
+        /* Responsive styles */
+        @@media (max-width: 600px) {
+            .booking-container {
+                padding: 15px;
+                margin: 20px auto;
+            }
+
+            .camping-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .rating {
+                margin-top: 10px;
+            }
+
+            .book-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <h2 class="booking-title">Book Your Camping Adventure</h2>
+
+        @if (Model.Camping != null)
+        {
+            <div class="camping-card">
+                <div class="camping-header">
+                    <h3>@Model.Camping.Name</h3>
+                    <div class="rating">
+                        @if (Model.Camping.Rating.HasValue)
+                        {
+                            for (int i = 0; i < (int)Model.Camping.Rating.Value; i++)
+                            {
+                                <span class="star">★</span>
+                            }
+                            for (double i = Model.Camping.Rating.Value; i < 5; i++)
+                            {
+                                <span class="star empty">☆</span>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="camping-description">
+                    <p>@Model.Camping.Description</p>
+                </div>
+
+                <div class="camping-info">
+                    <div class="info-item">
+                        <span class="icon">📍</span>
+                        <span>@Model.Camping.Address</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reservation-form-container">
+                <h3 class="form-title">Select Your Dates</h3>
+                <form method="post" class="reservation-form">
+                    <input type="hidden" asp-for="Reservation.CampingId" />
+
+                    <div class="form-group">
+                        <label for="persons">People Number:</label>
+                        <input type="number" value=1 id="persons" asp-for="Reservation.NumberOfPeople" />
+                    </div>
+                  
+                    <div class="form-group">
+                        <label for="checkin">Check-in Date:</label>
+                        <input type="date" value="@System.DateTime.Now.ToString("yyyy-MM-dd")" id="checkin" asp-for="Reservation.CheckIn" required class="date-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout">Check-out Date:</label>
+                        <input type="date" value="@System.DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" id="checkout" asp-for="Reservation.CheckOut" required class="date-input" />
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="book-button">
+                            <span class="icon">🏕️</span> Book Your Stay
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="not-found">
+                <div class="not-found-icon">🔍</div>
+                <p>Campsite not found. Please try another campsite.</p>
+                <a href="/campings" class="back-button">Browse All Campsites</a>
+            </div>
+        }
+    </div>
+</body>
+</html>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Booking page loaded');
+        });
+    </script>
+}
